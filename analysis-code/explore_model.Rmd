@@ -1,0 +1,180 @@
+---
+title: "Evictions v. Homelessness Analysis"
+subtitle: "Sarah Jiang"
+output: html_notebook
+---
+
+* summarize and xplore data; visualize
+** scatter x and y
+** maybe histograms i dont fucking know
+** correlation..???
+
+* initial regression; demonstrate that the fit is bad
+** plot residuals
+
+* introduce state fixed effects FUCKFUCUFKCKC
+** initial fe reg: explain overall, between and within variation
+** do a hausman test seems easy enough
+** focus on within variation?? or time demean?
+** maybe also a first differences test?
+
+* non linearity (how to combine nonlinearity with fixed effects?)
+
+* find some tests to do to figure out best model ig
+
+* then conclude
+
+
+```{r}
+library(haven)
+library(MASS)
+library(ggplot2)
+data = read_dta("C:/Users/runhu/Desktop/research/108Project/testrun/housed.dta")
+```
+
+## Summarize & explore data
+
+Dataset comprises of 452 observations of eviction filing rate (filerate) and number of homeless people per 1,000 people per state per year from 2008 to 2018. Not all states and years are represented. Variables red, blue, densityrank and dense are there for the purpose of profiling states and do not vary within each state. The variable fileyear = year - 1 to stagger filerate and homelesscap as suggested by my professor, since the effects of evictions may not have an immediately observable effect on the state's population of homeless.
+
+```{r}
+summary(data)
+
+par(mfrow = c(1, 2))
+
+hist(data$homelesscap, breaks = 40, main = "homelessness by state by year", xlab = '# homeless people (per 1,000)', col = 'pink')
+hist(data$filerate, breaks = 40, main = 'rate of eviction filings/state/year', xlab = '# eviction filings per 1,000 renting households', col = 'goldenrod1')
+
+boxplot(data$homelesscap, main = "homelessness by state by year", ylab = '# homeless people (per 1,000)')
+boxplot(data$filerate, main = 'eviction filings/state/year', ylab = '# eviction filings per 1,000 renting households')
+```
+
+## Exploring homelesscap v. filerate
+```{r}
+par(mfrow = c(1, 1))
+plot(data$filerate, data$homelesscap)
+
+```
+The distributions of homelesscap and filingrate are very right-skewed and seem multimodal. For now I'm just going to have to do my best with what I know
+
+
+Is there any relationship between eviction filing rates and homelessness?
+
+```{r}
+base = ggplot(data = data, mapping = aes(x = filerate, y = homelesscap))
+base + geom_point(size = 0.8) + 
+  geom_smooth(method = 'lm', color = 'black', linewidth = .7) +
+  geom_smooth(color = 'green', size = .7) +
+  labs(title = 'Scatterplot of rates of evictions filings & rates of homelessness by state by year') +
+  ylab('# homeless persons per 1,000 state residents') +
+  xlab('# eviction filings per 1,000 renting households')
+
+```
+
+A linear model is clearly not a good fit for the distribution of our data; there is heteroskedasticity (in the errors?)and our residuals(?) are nowhere near Normally distributed. And looking at the scatterplot above, expectation of error given x is not 0 (as x increases u decreases if u = yhat - y)
+
+
+#### Linear regression
+```{r}
+l_model = lm(homelesscap ~ filerate, data = data)
+#par(mfrow = c(2, 2))
+layout(matrix(c(1, 2, 1, 2, 3, 4, 3, 4), nrow = 4, ncol = 2, byrow = T))
+summary(l_model)
+plot(l_model)
+mtext('homelesscap = A + B(filerate) + u', side = 3, line = -2, outer = TRUE)
+```
+The results also reflect that the model is poorly fitted and we also have omitted variable bias. Let's add some controls to our model.
+
+
+#### Multivariate linear regression
+```{r}
+lc_model = lm(homelesscap ~ filerate + blue + densityrank, data = data)
+#par(mfrow = c(2, 2))
+layout(matrix(c(1, 2, 1, 2, 3, 4, 3, 4), nrow = 4, ncol = 2, byrow = T))
+summary(lc_model)
+plot(lc_model)
+mtext('homelesscap = A + B(filerate) + C(blue) + D(densityrank) + u', side = 3, line = -2, outer = TRUE)
+```
+interpret it stoopid
+
+
+#### Log-log regression
+
+Try transforming our data using a log-linear model. Unfortunately, we have some zeros in our data so we'll need to drop those observations.
+```{r}
+data_nozero = subset(data, (filerate>0) & (homelesscap>0))
+
+ln_model = lm(log(homelesscap) ~ log(filerate) + blue + densityrank, data = data_nozero)
+layout(matrix(c(1, 2, 1, 2, 3, 4, 3, 4), nrow = 4, ncol = 2, byrow = T))
+summary(ln_model)
+plot(ln_model)
+mtext('ln(homelesscap) = A + B(ln(filerate)) + controls + u', side = 3, line = -2, outer = TRUE)
+```
+
+From looking at the plots the fit seems to be much improved; distribution of residuals is much less crazy & heteroskedasticity seems to be reduced significantly. Coefficients say that for every 1% change in x y changes by -.02% (???) on average holding politics and density constant. however the result is not statistically significant and our R^2 has decreased from our last model despite the residuals on this model behaving more
+
+## State-fixed effects
+```{r}
+dlabs = c('1' = 'High Density', '0' = 'Low Density')
+blabs = c('1' = 'Blue state', '0' = 'Red or Purple state')
+
+base + geom_point(size = 0.8) +
+  geom_smooth(method = 'lm', color = 'black', linewidth = .7) +
+  geom_smooth(color = 'green', linewidth = .7) +
+  facet_grid(rows = vars(dense), cols = vars(blue), 
+             labeller = labeller(blue = blabs, dense = dlabs))
+```
+
+The relationship between filing rate and homelessness seems to vary wildly based on state characteristics. For this reason, a fixed effects model could work better for our data.
+
+### least squares dummy variable model
+```{r}
+lsdv_model = lm(homelesscap ~ filerate + factor(state_abbrev)-1, data = data)
+summary(lsdv_model)
+```
+not sure wheter to omit intercept or not? bc i dont want to imply that homeless = 0 when filerate = 0 but also would it cause multicollinearity?
+filerate effect still insignificant but state intercepts significant
+
+```{r}
+#layout(matrix(c(1, 2, 1, 2, 3, 4, 3, 4), nrow = 4, ncol = 2, byrow = T))
+
+#plot(lsdv_model)
+hist(lsdv_model$residuals)
+plot(data$filerate, lsdv_model$residuals)
+```
+
+```{r}
+library(plm)
+fe_model = plm(homelesscap ~ filerate, data = data, index = c('state_abbrev', 'year'), model = 'within')
+summary(fe_model)
+
+```
+
+this version of fixed effects seems to not work very well at all lmao. very high p
+
+```{r}
+#attempt at graphing but uhhhhh
+lsdv_yhat = lsdv_model$fitted.values
+states = unique(data$state_abbrev)
+states = sample(states, 10, replace = F)
+
+tenstates = data[which(data$state_abbrev %in% states), ]
+library(car)
+scatterplot(lsdv_yhat ~ filerate | state_abbrev, data = tenstates, boxplots = F, smooth = F)
+```
+
+
+
+polynomial tffff
+```{r}
+data$filerate2 = data$filerate ^ 2
+l2_model = lm(homelesscap ~ filerate + filerate2 + blue + densityrank, data = data)
+summary(l2_model)
+
+l2_yhat = l2_model$fitted.values
+
+plot(data$filerate, data$homelesscap)
+lines(data$filerate, l2_yhat)
+```
+
+
+
