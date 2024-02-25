@@ -5,9 +5,9 @@ Using data from the US Department of Housing and Urban Development, the Princeto
 ## Data Sources ##
 1. Gromis, Ashley, Ian Fellows, James R. Hendrickson, Lavar Edmonds, Lillian Leung, Adam Porton, and Matthew Desmond. Estimating Eviction Prevalence across the United States. Princeton University Eviction Lab. https://data-downloads.evictionlab.org/#data-for-analysis/. Deposited May 13, 2022.
 2. MIT Election Data and Science Lab, 2017, "U.S. Senate statewide 1976–2020", https://doi.org/10.7910/DVN/PEJ5QU, Harvard Dataverse, V7, UNF:6:NFZ83YH7C/fCm6x0stmMwA== [fileUNF]
-3. United States Census Bureau. 2016. "Intercensal Estimates of the Resident Population for the United States, Regions, States, and Puerto Rico: April 1, 2000 to July 1, 2010". Washington, D.C.: US Census Bureau. [https://www2.census.gov/programs-surveys/popest/tables/2000-2010/intercensal/state/]
-4. United States Census Bureau. 2021. "Annual Estimates of the Resident Population for the United States, Regions, States, the District of Columbia, and Puerto Rico: April 1, 2010 to July 1, 2019; April 1, 2020; and July 1, 2020 (NST-EST2020)". Washington, D.C.: US Census Bureau. [https://www2.census.gov/programs-surveys/popest/tables/2010-2020/state/totals/]
-5. United States Department of Housing and Urban Development. 2023. "2007 - 2023 PIT Estimates by State". Washington, D.C.: HUD. [https://www.hudexchange.info/resource/3031/pit-and-hic-data-since-2007/]
+3. United States Census Bureau. 2016. "Intercensal Estimates of the Resident Population for the United States, Regions, States, and Puerto Rico: April 1, 2000 to July 1, 2010". Washington, D.C.: US Census Bureau. [URL](https://www2.census.gov/programs-surveys/popest/tables/2000-2010/intercensal/state/)
+4. United States Census Bureau. 2021. "Annual Estimates of the Resident Population for the United States, Regions, States, the District of Columbia, and Puerto Rico: April 1, 2010 to July 1, 2019; April 1, 2020; and July 1, 2020 (NST-EST2020)". Washington, D.C.: US Census Bureau. [URL](https://www2.census.gov/programs-surveys/popest/tables/2010-2020/state/totals/)
+5. United States Department of Housing and Urban Development. 2023. "2007 - 2023 PIT Estimates by State". Washington, D.C.: HUD. [URL](https://www.hudexchange.info/resource/3031/pit-and-hic-data-since-2007/)
 
 ## Directory ##
 
