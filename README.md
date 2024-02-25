@@ -1,7 +1,6 @@
 # Eviction Filing Rates & Homelessness
 
-Using data from the US Department of Housing and Urban Development, the Princeton University Eviction Lab, the US Census Bureau and the MIT Elections Lab, I create a panel dataset observing rate of eviction filings and rate of homelessness by state by year, plus political leaning and population density ranking by state. I explore the data and create a couple of regression models to assess whether more eviction filings is indicative of more homelessness in a state.  
-Sorry for doing everything in different languages; I sort of just used whatever felt easiest.
+Using data from the US Department of Housing and Urban Development, the Princeton University Eviction Lab, the US Census Bureau and the MIT Elections Lab, I create a panel dataset observing rate of eviction filings and rate of homelessness by state by year, plus political leaning and population density ranking by state. I explore the data and create a couple of regression models to assess whether a state's rate of eviction filings can indicate higher levels of homelessness.  
 
 ## Data Sources ##
 1. Gromis, Ashley, Ian Fellows, James R. Hendrickson, Lavar Edmonds, Lillian Leung, Adam Porton, and Matthew Desmond. Estimating Eviction Prevalence across the United States. Princeton University Eviction Lab. https://data-downloads.evictionlab.org/#data-for-analysis/. Deposited May 13, 2022.
