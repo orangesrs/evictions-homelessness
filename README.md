@@ -10,14 +10,14 @@ Using data from the US Department of Housing and Urban Development, the Princeto
 5. United States Department of Housing and Urban Development. 2023. "2007 - 2023 PIT Estimates by State". Washington, D.C.: HUD. [https://www.hudexchange.info/resource/3031/pit-and-hic-data-since-2007/]
 
 ## Directory ##
-`data/`: Datasets directly downloaded from above sources
-`stata-files/`: 
-- `datacleaning_FINAL.do`: Stata do-file for creating panel dataset
-`analysis-in-R/`: 
-- `panel-data.csv`: 
-`results/`: tables n shit
-`finalreport.rmd`
-`finalreport.pdf`
-`requirements.txt`: software info ig
 
+- `data/`: Datasets directly downloaded from above sources
+- `stata-files/`
+    - `datacleaning_FINAL.do`: Stata do-file for creating panel dataset
+- `analysis-in-R/`
+    - `panel-data.csv`: cleaned panel  
+- `results/`: tables n shit
+- `finalreport.pdf`
+- `requirements.txt`: software info ig
+- `README.md`
 
