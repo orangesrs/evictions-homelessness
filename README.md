@@ -11,14 +11,18 @@ Using data from the US Department of Housing and Urban Development, the Princeto
 
 ## Directory ##
 
-- `data/`  Datasets directly downloaded from above sources
-- `cleaning-code/`
-    - `combiningpops.py` Run this first. Combines & cleans the Census population estimates
-    - `datacleaning_FINAL.do` Run this second. Creates panel dataset
-- `analysis-code/`
-    - `homelesspanel.dta` Cleaned data
-- `results/` tables and stuff
-- `finalreport.pdf`
-- `requirements.txt` software info ig
+- `data/`
+    - `raw/` Datasets directly downloaded from above sources
+        - `codebooks_etc/`
+    - `half-processed/`
+    - `homelesspanel.dta`
+- `code/`
+    - `1-combiningpops.py` Combines & cleans the Census population estimates
+    - `2-datacleaning.do` Creates panel dataset
+    - `3-explore.r`
+    - `requirements.txt`
+- `notebooks/`
+    - `explore_model.rmd`
+    - `explore_model.nb.html`
 - `README.md`
 
