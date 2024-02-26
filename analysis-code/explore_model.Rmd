@@ -101,7 +101,7 @@ To account for these assumption violations, I will incorporate robust standard e
 
 $~$
 
-#### Initial simple linear regression
+### Initial simple linear regression
 
 $$\hat{homelesscap}_i = \hat\beta_0 + \hat\beta_1{filerate}_i + u_i$$
 
@@ -121,7 +121,7 @@ Let's add some controls to our model.
 
 $~$
 
-#### Multivariate linear regression
+### Multivariate linear regression
 
 $$\hat{homelesscap}_i = \hat\beta_0 + \hat\beta_1{filerate}_i + \hat\beta_2{red}_i + \hat\beta_3{blue}_i + \hat\beta_4{densityrank}_i + u_i$$
 ****** is it ok to have both red and blue in the model though
@@ -153,7 +153,7 @@ not sure if my specification is ok. or if we even care about robust standard err
 
 $~$
 
-#### Quadratic regression
+### Quadratic regression
 
 ```{r}
 l2_model = lm(homelesscap ~ filerate + filerate^2 + blue + densityrank, data = data)
@@ -170,7 +170,7 @@ interpretation fo coefficients more complicated.
 
 $~$
 
-#### Log-log regression
+### Log-log regression
 
 $$\hat{ln(homelesscap)}_i = \hat\beta_0 + \hat\beta_1{ln(filerate)}_i + \hat\beta_2{red}_i + \hat\beta_3{blue}_i + \hat\beta_4{densityrank}_i + u_i$$
 
@@ -217,7 +217,7 @@ model could work better for our data.
 
 $~$
 
-#### Least squares dummy variable model
+### Least squares dummy variable model
 
 $$\hat{homelesscap}_{it} = \hat\beta_0(?) + \hat\beta_1{filerate}_{it} + \hat\gamma_{AK}{DAK}_i + ... + \hat\gamma_{WY}{DWY}_i + u_{it}$$
 
@@ -241,7 +241,7 @@ plot(lsdv_model, which = 1:2)
 
 $~$
 
-#### Fixed-effects model (within)
+### Fixed-effects model (within)
 
 
 
