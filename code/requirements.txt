@@ -1,0 +1,13 @@
+~ PYTHON ~
+pandas
+
+~ STATA ~
+statastates
+
+~ R ~
+haven
+MASS
+ggplot2
+lmtest
+sandwich
+plm
