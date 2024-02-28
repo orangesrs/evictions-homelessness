@@ -30,7 +30,7 @@ plot_template = function(data, type = "box", title, label, color = 'seashell') {
   if ( !(type %in% names(plot_types)) ) {
     stop("type must be 'box' or 'hist'")
   }
-  # Use the specified plot function
+  # choose specified type of plot by indexing plot_types
   plotted = plot_types[[type]]
   plotted(data)
 }
