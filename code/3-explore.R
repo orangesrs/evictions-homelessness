@@ -1,5 +1,4 @@
 library(haven)
-#library(MASS)
 library(ggplot2)
 data = read_dta("homelesspanel.dta")
 
@@ -7,38 +6,66 @@ head(data)
 sumstats = summary(data[c('filerate', 'homelesscap', 'chroniccap', 'red', 'blue')])
 print(sumstats)
 
+
+plot_template = function(data, type = "box", title, label, color = 'seashell') {
+  # aesthetic theme for distribution visualizations.
+  ## create named list of boxplot func & hist func
+  plot_types = list(
+    box = function(d) {
+      boxplot(d, breaks = 40, 
+              main = title, 
+              xlab = label, 
+              col = color, 
+              cex.main = 0.7, 
+              cex.lab = 0.7)},
+    hist = function(d) {
+      hist(d, breaks = 40, 
+              main = title, 
+              xlab = label, 
+              col = color, 
+              cex.main = 0.7, 
+              cex.lab = 0.7)}
+  )
+  ## error handling
+  if ( !(type %in% names(plot_types)) ) {
+    stop("type must be 'box' or 'hist'")
+  }
+  # Use the specified plot function
+  plotted = plot_types[[type]]
+  plotted(data)
+}
+
+
+hlabel = 'homeless persons per 1,000 residents'
+flabel = 'eviction filings per 1,000 renting households'
+
+# visualize distributions of homelesscap & filerate
+## side by side histograms
 par(mfrow = c(1, 2))
 
-hist(data$homelesscap, breaks = 40, 
-     main = "Homelessness by state by year (homelesscap)", 
-     xlab = 'homeless persons per 1,000 residents', 
-     col = 'seashell', 
-     cex.main = 0.7, 
-     cex.lab = 0.7)
+plot_template(data$homelesscap, type = 'hist',
+              title = "Homelessness by state by year (homelesscap)",
+              label = hlabel)
 
-hist(data$filerate, breaks = 40, 
-     main = 'Rate of eviction filings by state by year (filerate)', 
-     xlab = 'eviction filings per 1,000 renting households', 
-     col = 'lavender', 
-     cex.main = 0.7, 
-     cex.lab = 0.7)
+plot_template(data$filerate, type = 'hist',
+              title = 'Rate of eviction filings by state by year (filerate)',
+              label = flabel,
+              color = 'lavender')
 
+## side by side boxplots
 par(mfrow = c(1, 2))
 
-boxplot(data$homelesscap, 
-        main = "Homelessness by state by year (homelesscap)", 
-        ylab = 'homeless persons per 1,000 residents', 
-        cex.main = 0.7, 
-        cex.lab = 0.7, 
-        col = 'seashell')
+plot_template(data$homelesscap,
+              title = "Homelessness by state by year (homelesscap)",
+              label = hlabel)
 
-boxplot(data$filerate, 
-        main = 'Eviction filings by state by year (filerate)', 
-        ylab = 'eviction filings per 1,000 renting households', 
-        cex.main = 0.7, 
-        cex.lab = 0.7, 
-        col = 'lavender')
+plot_template(data$filerate,
+              title = 'Rate of eviction filings by state by year (filerate)',
+              label = flabel,
+              color = 'lavender')
 
+
+# visualize relationship between homelesscap & filerate
 base = ggplot(data = data, mapping = aes(x = filerate, y = homelesscap))
 
 base + geom_point(size = 0.8) + 
@@ -46,5 +73,5 @@ base + geom_point(size = 0.8) +
   geom_smooth(color = 'green', linewidth = .7) +
   labs(title = 'Scatterplot of rates of evictions filings & rates 
        of homelessness by state by year') +
-  ylab('# homeless persons per 1,000 residents') +
-  xlab('# eviction filings per 1,000 renting households')
+  ylab(hlabel) +
+  xlab(flabel)
