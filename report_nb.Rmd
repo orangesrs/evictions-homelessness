@@ -191,7 +191,10 @@ The residual standard error for this model is lower (0.4656, previously 0.9464),
 
 I will try adding some control variables to see if we can mitigate the omitted variable bias that is present. However, the control variables I have--red, blue and population density--may be plausibly correlated with filerate, so I am risking multicollinearity with the addition of these variables.
 
-note: maybe talk about direction of bias as well
+```{r include = FALSE}
+"note: maybe talk about direction of bias as well"
+```
+
 
 $~$
 
@@ -252,14 +255,13 @@ $~$
 
 ### Fixed-effects model (within)
 
-```{r}
+```{r include = FALSE}
 library(plm)
 fe_model = plm(log(homelesscap) ~ log(filerate), data = data_nozero, index = c('state_abbrev', 'year'), model = 'within')
 summary(fe_model)
+
+# notes: opposite results? filerate's coefficient now significant and positive, but adj r-sq is negative..?
 ```
-
-notes: opposite results? filerate's coefficient now significant and positive, but adj r-sq is negative..?
-
 
 ## Discussion & conclusion
 
@@ -267,6 +269,8 @@ From these models (aside from last plm--need to further investigate), I conclude
 
 Going forward, we could look more into our sample and data sources. we already know that the PIT counts are flawed measures, plus we could further investigate our panel dataset to see why it is unbalanced and whether we can fix that.
 
+```{r include = FALSE}
+"
 notes: 
 -   correlation..??? covariance???
 -   initial fe reg: explain overall, between and within variation
@@ -276,3 +280,7 @@ notes:
 -   EXPORT SOME TABLES?
 -   find some tests to do to figure out best model ig. evaluation of fixed effects models
 -   don't include all diagnostic graphs in this notebook. put them in a different script for those interested
+
+"
+```
+
