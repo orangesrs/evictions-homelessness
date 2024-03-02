@@ -130,7 +130,7 @@ base = ggplot(data = data, mapping = aes(x = filerate, y = homelesscap))
 base + geom_point(size = 0.8) + 
   geom_smooth(method = 'lm', color = 'black', linewidth = .7) +
   geom_smooth(color = 'green', linewidth = .7) +
-  labs(title = 'Scatterplot of rates of evictions filings & rates of homelessness by state by year') +
+  labs(title = 'Rates of evictions filings & rates of homelessness by state by year') +
   ylab('# homeless persons per 1,000 residents') +
   xlab('# eviction filings per 1,000 renting households')
 
@@ -210,6 +210,8 @@ At 95% confidence, the coefficient of filerate could very well be 0; filerate ma
 
 Knowing this, it is likely a good idea to take a closer look at state-fixed attributes.
 
+note: check for multicollinearity
+
 $~$
 
 ## State-fixed effects
@@ -224,7 +226,7 @@ base + geom_point(size = 0.8) +
   geom_smooth(color = 'green', linewidth = .7) +
   facet_grid(rows = vars(dense), cols = vars(blue), 
              labeller = labeller(blue = blabs, dense = dlabs)) +
-  labs(title = 'scatterplot of homelessness rate v. eviction filings rate, by state characteristics') +
+  labs(title = 'Homelessness rate v. eviction filings rate, by state characteristics') +
   ylab(hlabel) +
   xlab(flabel)
 ```
