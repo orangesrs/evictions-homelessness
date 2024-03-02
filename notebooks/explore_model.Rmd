@@ -56,27 +56,71 @@ print(sumstats)
 ```
 
 Let's take an initial look at the distribution of our main variables of interest, homelesscap and filerate.
+
+```{r}
+# create function for consistent aesthetic theme for distribution visualizations.
+plot_template = function(data, type = "box", title, label, color = 'seashell') {
+  ## create named list of boxplot func & hist func
+  plot_types = list(
+    box = function(dt) {
+      boxplot(dt, breaks = 40, 
+              main = title, 
+              xlab = label, 
+              col = color, 
+              cex.main = 0.7, 
+              cex.lab = 0.7)},
+    hist = function(dt) {
+      hist(dt, breaks = 40, 
+              main = title, 
+              xlab = label, 
+              col = color, 
+              cex.main = 0.7, 
+              cex.lab = 0.7)}
+  )
+  ## error handling
+  if ( !(type %in% names(plot_types)) ) {
+    stop("type must be 'box' or 'hist'")
+  }
+  # choose specified type of plot by indexing plot_types
+  plotted = plot_types[[type]]
+  plotted(data)
+}
+
+hlabel = 'homeless persons per 1,000 residents'
+flabel = 'eviction filings per 1,000 renting households'
+```
+
+
 ```{r}
 par(mfrow = c(1, 2))
 
-hist(data$homelesscap, breaks = 40, main = "Homelessness by state by year (homelesscap)", xlab = 'homeless persons per 1,000 residents', col = 'seashell', cex.main = 0.7, cex.lab = 0.7)
+plot_template(data$homelesscap, type = 'hist',
+              title = "Homelessness by state by year (homelesscap)",
+              label = hlabel)
 
-hist(data$filerate, breaks = 40, main = 'Rate of eviction filings by state by year (filerate)', xlab = 'eviction filings per 1,000 renting households', col = 'lavender', cex.main = 0.7, cex.lab = 0.7)
+plot_template(data$filerate, type = 'hist',
+              title = 'Rate of eviction filings by state by year (filerate)',
+              label = flabel,
+              color = 'lavender')
 ```
 ```{r}
 par(mfrow = c(1, 2))
 
-boxplot(data$homelesscap, main = "Homelessness by state by year (homelesscap)", ylab = 'homeless persons per 1,000 residents', cex.main = 0.7, cex.lab = 0.7, col = 'seashell')
+plot_template(data$homelesscap,
+              title = "Homelessness by state by year (homelesscap)",
+              label = hlabel)
 
-boxplot(data$filerate, main = 'Eviction filings by state by year (filerate)', ylab = 'eviction filings per 1,000 renting households', cex.main = 0.7, cex.lab = 0.7, col = 'lavender')
+plot_template(data$filerate,
+              title = 'Rate of eviction filings by state by year (filerate)',
+              label = flabel,
+              color = 'lavender')
 ```
 
 The overall distributions of homelesscap and filerate are both very
 right-skewed and likely multimodal due to states with unique
 circumstances (the high outlier on filing rates is Maryland). 
 
-For now I'm just going to have to do my best with what I know. \*\*
-correlation..??? covariance???
+For now I'm just going to have to do my best with what I know.
 
 ## Exploring homelesscap v. filerate
 
@@ -95,9 +139,7 @@ base + geom_point(size = 0.8) +
 
 ```
 
-A linear model (illustrated by the straight black line) would clearly not be a good fit for the distribution of our data. It would also violate assumptions about heteroskedasticity and the Conditional Mean Assumption, $E(u|x) = 0$. As filerate increases, the variance of the errors decreases. $E(u|x)$ fluctuates as $x$, or filerate, changes, because as filerate increases, we know that $E(u)$ will first become negative around $150 < x < 300$ before becoming positive when $x > 350$. 
-
-To account for these assumption violations, I will incorporate robust standard errors and control variables in my models.
+A linear model (illustrated by the straight black line) would clearly not be a good fit for the distribution of our data. It would also violate assumptions regarding heteroskedasticity and the Conditional Mean Assumption, $E(u|x) = 0$. As filerate increases, the variance of the errors decreases. $E(u|x)$ fluctuates as $x$, or filerate, changes, because as filerate increases, we know that $E(u)$ will first become negative around $150 < x < 300$ before becoming positive when $x > 350$. 
 
 $~$
 
@@ -106,67 +148,33 @@ $~$
 $$\hat{homelesscap}_i = \hat\beta_0 + \hat\beta_1{filerate}_i + u_i$$
 
 ```{r}
+x_var = data$filerate
+model = l_model
+
+plot(x_var, model$residuals)
+```
+
+```{r}
 l_model = lm(homelesscap ~ filerate, data = data)
 summary(l_model)
 
 # Plot model diagnostics
-par(mfrow=c(1, 2))
-plot(l_model, which = 1:2)
-mtext('Simple linear regression model diagnostics', side = 3, line = -2, outer = TRUE)
+plot_diagnostics = function(model, x_var = data$filerate, xlabel = 'eviction filings'){
+  par(mfrow=c(1, 2))
+  plot(x_var, model$residuals, main = 'scatterplot of x_i and u_i', xlab = xlabel, ylab = "residuals")
+  plot(model, which = 2)
+}
+
+plot_diagnostics(model = l_model)
 ```
 
-From the scatterplot of fitted values and residuals, we can see a clear downward trend in the residual values, showing that the variables $u$ and $\hat{y}$ are not independent. The QQ plot also shows that our error terms are not Normally distributed. These plots confirm that this simple linear specification does not fit our data well.
+At a glance, this model isn't great, with a very low $R^@$ = 0.01456--variation of filing rate only explains around 1.4% of variation in homelesscap. filerate's coefficient of -0.00169 indicates a very slightly negative relationship between filerate and homelesscap that is significant with 95% confidence, with a p-value of 0.0102. The intercept says that on average, a state with no eviction filings will have approximately 1.7885 homeless per 1,000 residents and is highly statistically significant. However, this model violates basically all of our classical linear regression model assumptions:
 
-Let's add some controls to our model.
+1. $E(u|x) = 0$: violated, as seen in the scatterplot of $x_i$ and $u_i$, average error is not consistently 0, and the QQ plot shows that they are not Normally distributed
+2. No heteroskedasticity: violated; variance of errors is very high at low values of x and decreases when x increases
+3. No autocorrelation: violated; errors systematically change as x increases
 
-$~$
-
-### Multivariate linear regression
-
-$$\hat{homelesscap}_i = \hat\beta_0 + \hat\beta_1{filerate}_i + \hat\beta_2{red}_i + \hat\beta_3{blue}_i + \hat\beta_4{densityrank}_i + u_i$$
-****** is it ok to have both red and blue in the model though
-```{r}
-lc_model = lm(homelesscap ~ filerate + red + blue + densityrank, data = data)
-summary(lc_model)
-
-par(mfrow = c(1, 2))
-plot(lc_model, which = 1:2)
-mtext('Multivariate linear regression model diagnostics', side = 3, line = -2, outer = TRUE)
-```
-
-Although the distribution of residuals is still far from what's desirable, the fit of this model is much improved compared to the previous one judging from the $R^2$. Several of the coefficients in this model are significantly different from 0. 
-
-Calculating robust standard errors; however if the model is wrong they won't be useful
-```{r}
-library(lmtest)
-library(sandwich)
-
-coeftest(lc_model, vcov = vcovHC, type = "HC1")
-
-waldtest(lc_model, terms = "filerate", vcov = vcovHC)
-
-confint(lc_model, "filerate", vcov = vcovHC)
-
-```
-
-not sure if my specification is ok. or if we even care about robust standard errors since we almost certainly don't have the right model. and we're probbly using the wrong type of robust standard error (HC1). but the hypothesis test and confidence intervals we got suggest that the effect that filerate has one homelesscap is slightly negative and significantly different from 0.
-
-$~$
-
-### Quadratic regression
-
-```{r}
-l2_model = lm(homelesscap ~ filerate + filerate^2 + blue + densityrank, data = data)
-summary(l2_model)
-```
-
-```{r, echo - FALSE}
-par(mfrow = c(1,2))
-plot(l2_model, which = 1:2)
-mtext('quadratic model diags', side = 3, line = -2, outer = TRUE)
-```
-
-interpretation fo coefficients more complicated.
+I will try transforming the data using a log-log model to see if the fit improves.
 
 $~$
 
@@ -174,27 +182,38 @@ $~$
 
 $$\hat{ln(homelesscap)}_i = \hat\beta_0 + \hat\beta_1{ln(filerate)}_i + \hat\beta_2{red}_i + \hat\beta_3{blue}_i + \hat\beta_4{densityrank}_i + u_i$$
 
-Try transforming the data using a log-log model. Unfortunately, we
-have some zeros in filerate so we'll need to drop the corresponding observations. also wont it screw up the interpretation to have logged y and x1 but not the controls..?
+We have a couple of zeros in filerate, so we'll need to drop those corresponding observations first.
 
 ```{r}
 data_nozero = subset(data, (filerate>0) & (homelesscap>0))
 
-ln_model = lm(log(homelesscap) ~ log(filerate) + red + blue + densityrank, data = data_nozero)
+ln_model = lm(log(homelesscap) ~ log(filerate), data = data_nozero)
 summary(ln_model)
-```
-```{r, echo = FALSE}
-par(mfrow = c(1,2))
-plot(ln_model, which = 1:2)
-mtext('ln(homelesscap) = A + B(ln(filerate)) + controls + u', side = 3, line = -2, outer = TRUE)
+
+plot_diagnostics(ln_model, x_var = data_nozero$filerate)
 ```
 
+Although the average value of residuals seem to have moved much closer to 0, the heteroskedasticity is still bad. The coefficient for ln(filerate) indicates that on average a 1% increase in filerate is associated with a 4% decrease in homelesscap, significant at the 5% level.
 
-From looking at the plots the fit seems to be much improved;
-distribution of residuals is much less crazy & heteroskedasticity seems
-to be reduced significantly, although it is still present. The coefficients indicate that according to this model, for every 1% change in x y changes by -.02% (???) on average, holding state politics and population density constant. however, the result is not statistically significant and our $R^2$ has decreased from our last model despite the residuals on this model behaving more.
+The residual standard error for this model is lower (0.4656, previously 0.9464), also indicating improved fit. The $R^2$ is slightly lower, however, suggesting that filerate by itself is not a good predictor of homelesscap.
 
-Coefficients here suggest no significant relationship between filerate and homelesscap.
+I will try adding some control variables to see if we can mitigate the omitted variable bias that is present. However, the control variables I have--red, blue and population density--may be plausibly correlated with filerate, so I am risking multicollinearity with the addition of these variables.
+
+$~$
+## Multivariable log-log
+```{r}
+mln_model = lm(log(homelesscap) ~ log(filerate) + red + blue + densityrank, data = data_nozero)
+summary(mln_model)
+
+plot_diagnostics(mln_model, x_var = data_nozero$filerate)
+```
+The variables in this model do a much better job of explaining the variability present in homelesscap, with an adjusted $R^2$ = 0.1267. While heteroskedasticity is still present, we can see from the QQ plot that the residuals seem relatively well-behaved otherwise. We can also see that the coefficient for filerate has decreased in both magnitude and statistical significance:
+```{r}
+confint(mln_model)
+```
+At 95% confidence, the coefficient of filerate could very well be 0; filerate may have no significant effect on homelesscap. The coefficient for red, however, is highly significant, and suggests that when a state is politically red, the rate of homelessness is 40% lower on average, holding population density and filing rate constant.
+
+Knowing this, it is likely a good idea to take a closer look at state-fixed attributes.
 
 $~$
 
@@ -211,9 +230,7 @@ base + geom_point(size = 0.8) +
              labeller = labeller(blue = blabs, dense = dlabs))
 ```
 
-The relationship between filing rate and homelessness seems to vary
-wildly based on state characteristics. For this reason, a fixed effects
-model could work better for our data.
+The relationship between filing rate and homelessness seems to vary wildly based on state characteristics. For this reason, a fixed effects model could work better for our data.
 
 $~$
 
@@ -222,53 +239,41 @@ $~$
 $$\hat{homelesscap}_{it} = \hat\beta_0(?) + \hat\beta_1{filerate}_{it} + \hat\gamma_{AK}{DAK}_i + ... + \hat\gamma_{WY}{DWY}_i + u_{it}$$
 
 ```{r}
-lsdv_model = lm(homelesscap ~ filerate + factor(state_abbrev)-1, data = data)
-#summary(lsdv_model)
+lsdv_model = lm(homelesscap ~ filerate + factor(state_abbrev) - 1, data = data)
+summary(lsdv_model)
+plot_diagnostics(lsdv_model)
 ```
 
-not sure whether to omit intercept or not? bc i dont want to imply that
+note: not sure whether to omit intercept or not? bc i dont want to imply that
 homeless = 0 when filerate = 0 but also would it cause
-multicollinearity? filerate effect still insignificant but state
-intercepts significant. would dropping a state dummy instead achieve the same effect?
+multicollinearity? need to truncate output. i can keep a table of all the coefficients somewhere else
 
-need to truncate output. i can keep a table of all the coefficients somewhere else
-
-```{r, echo = FALSE}
-par(mfrow=c(1, 2))
-
-plot(lsdv_model, which = 1:2)
-```
+This model further reinforces the notion that filerate is not a good predictor for homelesscap; I am not sure whether R^2 can be used for this context but adj $R^2$ = 0.97--this model fits the data VERY well (to the point of being overfitted, possibly?), and most of the state dummy coefficients are highly significant, but the coefficient for filerate is once again insignificant. 
+It looks like time-invariant state attributes may have a lot more to do with a state's rates of homelessness than a state's rate of eviction filings.
 
 $~$
 
 ### Fixed-effects model (within)
 
-
-
 ```{r}
 library(plm)
 fe_model = plm(log(homelesscap) ~ log(filerate), data = data_nozero, index = c('state_abbrev', 'year'), model = 'within')
 summary(fe_model)
-
 ```
 
-this version of fixed effects seems to not work very well at all lmao.
-very high p. except when logged
+opposite results? filerate is a significant coefficients, but TSS and RSS are quite high and somehow adj r-sq is negative lol???
 
--   introduce state fixed effects \*\* initial fe reg: explain overall,
-    between and within variation \*\* do a hausman test seems easy
-    enough \*\* focus on within variation?? or time demean? \*\* maybe
-    also a first differences test?
--   non linearity (how to combine nonlinearity with fixed effects?) \*\*
-    EXPORT SOME TABLES?
--   find some tests to do to figure out best model ig
+-   correlation..??? covariance???
+-   initial fe reg: explain overall, between and within variation
+-   do a hausman test seems easy enough
+    -   focus on within variation?? or time demean? maybe also a first differences test?
+-   non linearity (how to combine non-linearity with fixed effects?) \*\*
+-   EXPORT SOME TABLES?
+-   find some tests to do to figure out best model ig. evaluation of fixed effects models
+-   don't include all diagnostic graphs in this notebook. put them in a different script for those interested
 
 ## Discussion & conclusion
 
-We could look more into our sample and data sources. we already know that the PIT counts
-are flawed measures, plus we could further investigate our panel dataset
-to see why it is unbalanced and doesnt have all states represented.
+From these models (aside from plm--need to further investigate), I conclude that rate of eviction filings does not significantly affect the rate of homelessness in a state.
 
-outliers handled w fe? or remove?
-
-** dont include all diagnostic graphs in this notebook. put them in a different script for those interested
+Going forward, we could look more into our sample and data sources. we already know that the PIT counts are flawed measures, plus we could further investigate our panel dataset to see why it is unbalanced and whether we can fix that.
