@@ -11,15 +11,15 @@ plot_template = function(data, type = "box", title, label, color = 'seashell') {
   # aesthetic theme for distribution visualizations.
   ## create named list of boxplot func & hist func
   plot_types = list(
-    box = function(d) {
-      boxplot(d, breaks = 40, 
+    box = function(dt) {
+      boxplot(dt, breaks = 40, 
               main = title, 
               xlab = label, 
               col = color, 
               cex.main = 0.7, 
               cex.lab = 0.7)},
-    hist = function(d) {
-      hist(d, breaks = 40, 
+    hist = function(dt) {
+      hist(dt, breaks = 40, 
               main = title, 
               xlab = label, 
               col = color, 
