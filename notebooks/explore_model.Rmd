@@ -146,9 +146,13 @@ $$\hat{homelesscap}_i = \hat\beta_0 + \hat\beta_1{filerate}_i + u_i$$
 
 ```{r}
 l_model = lm(homelesscap ~ filerate, data = data)
-summary(l_model)
 
-# Plot model diagnostics
+# table regression output
+library(jtools)
+set_summ_defaults(digits = 4)
+summ(l_model)
+
+# plot model diagnostics
 plot_diagnostics = function(model, x_var = data$filerate, xlabel = 'eviction filings'){
   par(mfrow=c(1, 2))
   plot(x_var, model$residuals, main = 'scatterplot of x_i and u_i', xlab = xlabel, ylab = "residuals")
@@ -158,7 +162,7 @@ plot_diagnostics = function(model, x_var = data$filerate, xlabel = 'eviction fil
 plot_diagnostics(model = l_model)
 ```
 
-This model doesn't do  great job of explaining homelesscap, having a very low $R^2$ = 0.01456--variation of filing rate only explains around 1.4% of variation in homelesscap. filerate's coefficient of -0.00169 indicates a very slightly negative relationship between filerate and homelesscap that is significant with 95% confidence, with a p-value of 0.0102. The intercept says that on average, a state with no eviction filings will have approximately 1.7885 homeless per 1,000 residents and is highly statistically significant. However, this model violates basically all of our classical linear regression model assumptions:
+This model doesn't do a great job of explaining homelesscap, having a very low $R^2$ = 0.01456--variation of filing rate only explains around 1.4% of variation in homelesscap. filerate's coefficient of -0.00169 indicates a very slightly negative relationship between filerate and homelesscap that is significant with 95% confidence, with a p-value of 0.0102. The intercept says that on average, a state with no eviction filings will have approximately 1.7885 homeless per 1,000 residents and is highly statistically significant. However, this model violates basically all of our classical linear regression model assumptions:
 
 1. $E(u|x) = 0$: violated, as seen in the scatterplot of $x_i$ and $u_i$, average error is not consistently 0, and the QQ plot shows that they are not Normally distributed
 2. No heteroskedasticity: violated; variance of errors is very high at low values of x and decreases when x increases
@@ -170,7 +174,7 @@ $~$
 
 ### Log-log regression
 
-$$\hat{ln(homelesscap)}_i = \hat\beta_0 + \hat\beta_1{ln(filerate)}_i + \hat\beta_2{red}_i + \hat\beta_3{blue}_i + \hat\beta_4{densityrank}_i + u_i$$
+$$\hat{ln(homelesscap)}_i = \hat\beta_0 + \hat\beta_1{ln(filerate)}_i + u_i$$
 
 We have a couple of zeros in filerate, so we'll need to drop those corresponding observations first.
 
@@ -180,8 +184,8 @@ data_nozero = subset(data, (filerate>0) & (homelesscap>0))
 
 # create model
 ln_model = lm(log(homelesscap) ~ log(filerate), data = data_nozero)
-summary(ln_model)
 
+summ(ln_model)
 plot_diagnostics(ln_model, x_var = data_nozero$filerate)
 ```
 
@@ -196,28 +200,47 @@ note: maybe talk about direction of bias as well
 $~$
 
 ### Multivariable log-log
-```{r}
-mln_model = lm(log(homelesscap) ~ log(filerate) + red + blue + densityrank, data = data_nozero)
-summary(mln_model)
 
+$$\hat{ln(homelesscap)}_i = \hat\beta_0 + \hat\beta_1{ln(filerate)}_i + \hat\beta_2{red}_i + \hat\beta_3{blue}_i + \hat\beta_4{dense}_i + u_i$$
+```{r}
+mln_model = lm(log(homelesscap) ~ log(filerate) + red + blue + dense, data = data_nozero)
+
+summ(mln_model)
 plot_diagnostics(mln_model, x_var = data_nozero$filerate)
 ```
-The variables in this model do a much better job of explaining the variability present in homelesscap, with an adjusted $R^2$ = 0.1267. While heteroskedasticity is still present, we can see from the QQ plot that the residuals seem relatively well-behaved otherwise. We can also see that the coefficient for filerate has decreased in both magnitude and statistical significance:
+The variables in this model do a much better job of explaining the variability present in homelesscap, with an adjusted $R^2$ = 0.1333. While heteroskedasticity is still present, we can see from the QQ plot that the residuals seem relatively well-behaved otherwise. 
+
+Use robust standard errors for heteroskedasticity:
+
+```{r}
+summ(mln_model, robust = 'HC1')
+```
+
+Our coefficients are still significant.
+
+We can also see that the coefficient for filerate has decreased in both magnitude and statistical significance:
 ```{r}
 confint(mln_model)
 ```
-At 95% confidence, the coefficient of filerate could very well be 0; filerate may have no significant effect on homelesscap. The coefficient for red, however, is highly significant, and suggests that when a state is politically red, the rate of homelessness is 40% lower on average, holding population density and filing rate constant.
+At 95% confidence, the coefficient of filerate could very well be 0; in fact, our 95% confidence interval is nearly centered at 0. filerate may have no significant effect on homelesscap. The coefficient for red, however, is highly significant, and suggests that when a state is politically red, the rate of homelessness can be expected to be 40% lower on average, holding population density and filing rate constant.
 
 Knowing this, it is likely a good idea to take a closer look at state-fixed attributes.
 
-note: check for multicollinearity
+note: check for multicollinearity?
+
+```{r}
+# Comparative table of coefficients
+export_summs(l_model, ln_model, mln_model, model.names = c('Linear', 'Log-log', 'Log-log + controls'))
+```
+
+
 
 $~$
 
 ## State-fixed effects
 
 ```{r}
-# scatter filerate on homelesscap, separating states with different politics and levels of population density
+# scatter filerate on homelesscap, separating states with different politics and population densities
 dlabs = c('1' = 'High Density', '0' = 'Low Density')
 blabs = c('1' = 'Blue state', '0' = 'Red or Purple state')
 
@@ -260,7 +283,7 @@ fe_model = plm(log(homelesscap) ~ log(filerate), data = data_nozero, index = c('
 summary(fe_model)
 ```
 
-notes: opposite results? filerate's coefficient now significant and positive, but adj r-sq is negative..?
+notes: filerate's coefficient now significant and positive, but adj r-sq is negative..?
 
 
 ## Discussion & conclusion
@@ -274,7 +297,7 @@ notes:
 -   initial fe reg: explain overall, between and within variation
 -   do a hausman test seems easy enough
     -   focus on within variation?? or time demean? maybe also a first differences test?
--   non linearity (how to combine non-linearity with fixed effects?) \*\*
+-   non linearity (how to combine non-linearity with fixed effects?) 
 -   EXPORT SOME TABLES?
 -   find some tests to do to figure out best model ig. evaluation of fixed effects models
 -   don't include all diagnostic graphs in this notebook. put them in a different script for those interested
